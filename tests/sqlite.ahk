@@ -8,6 +8,11 @@ class SQLiteTests
 {
 	sql := SQLite3()
 
+	test1_open() {
+		sql := this.sql
+		res := sql.Open("..\examples\example.db")
+		Yunit.Assert(res == SQLITE_OK && IsNumber(sql.hDatabase))
+	}
 	test3_escape() {
 		for str in ["one's type", "leo's", "his cars' info"]
 		{
