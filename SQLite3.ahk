@@ -76,4 +76,19 @@ Class SQLite3 extends SQliteBase {
 		}
 	}
 
+;private methods
+;---------------------
+
+	/**
+	 * Function: Escape(str)
+	 *
+	 * This function escapes all single quotes from SQL strings.
+	 *
+	 * Params:
+	 * str - String to be escaped
+	 *
+	 * Returns:
+	 * str - Escaped string
+	 */
+	static Escape(str) => StrReplace(str, "'", "''")
 }
