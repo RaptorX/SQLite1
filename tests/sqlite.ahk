@@ -1,4 +1,4 @@
-#Include <Yunit\Yunit>
+﻿#Include <Yunit\Yunit>
 #Include <Yunit\Window>
 #Include <SQLite\SQLite3>
 
@@ -12,6 +12,12 @@ class SQLiteTests
 		sql := this.sql
 		res := sql.Open("..\examples\example.db")
 		Yunit.Assert(res == SQLITE_OK && IsNumber(sql.hDatabase))
+	}
+	test2_close() {
+		sql := this.sql
+		res := sql.Open("..\examples\example.db")
+		res := sql.Close()
+		Yunit.Assert(res == SQLITE_OK && !IsNumber(sql.hDatabase))
 	}
 	test3_escape() {
 		for str in ["one's type", "leo's", "his cars' info"]
