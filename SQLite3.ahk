@@ -41,4 +41,39 @@ class SQliteBase {
 
 Class SQLite3 extends SQliteBase {
 
+;private vars
+;---------------------
+
+	static ptr            := 0
+	static bin            := "sqlite3" (A_PtrSize = 4 ? 32 : 64) ".dll"
+	
+
+;public vars
+;---------------------
+
+	hDatabase := Buffer(A_PtrSize)
+	
+	_autoEscape    := true
+	autoEscape {
+		get => this._autoEscape
+		set {
+			static errMsg := "This property only accepts true or false"
+			if !(value ~= true "|" false)
+				throw ValueError(errMsg, -1, A_ThisFunc "> autoEscape")
+			else
+				return this._autoEscape := value
+		}
+	}
+	_dllManualMode := false
+	dllManualMode {
+		get => this._dllManualMode
+		set {
+			static errMsg := "This property only accepts true or false"
+			if !(value ~= true "|" false)
+				throw ValueError(errMsg, -1, A_ThisFunc "> dllManualMode")
+			else
+				return this._dllManualMode := value
+		}
+	}
+
 }
