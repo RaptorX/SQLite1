@@ -114,6 +114,31 @@ Class SQLite3 extends SQliteBase {
 		this.hDatabase := NumGet(this.hDatabase, "ptr")
 		return res
 	}
+	
+	/**
+	 * Function: Close()
+	 * https://www.sqlite.org/c3ref/close.html
+	 *
+	 * Destroys an SQLite3 object.
+	 *
+	 * Ideally, applications should finalize all prepared statements,
+	 * close all BLOB handles, and finish all SQLite3_backup objects
+	 * associated with the SQLite3 object prior to attempting to close the object.
+	 *
+	 * Params: NONE
+	 *
+	 * Returns:
+	 * SQLITE_OK   - Object is successfully destroyed and
+	 *               all associated resources are deallocated.
+	 * SQLITE_BUSY - Object is associated with unfinalized prepared
+	 *               statements, BLOB handlers, and/or
+	 *               unfinished SQLite3_backup objects.
+	 */
+	Close() {
+		res := DllCall(SQLite3.bin "\sqlite3_close", "ptr", this.hDatabase, "cdecl")
+		this.hDatabase := Buffer(A_PtrSize)
+		return res
+	}
 ;private methods
 ;---------------------
 
@@ -129,4 +154,7 @@ Class SQLite3 extends SQliteBase {
 	 * str - Escaped string
 	 */
 	static Escape(str) => StrReplace(str, "'", "''")
+
+;sub classes
+;---------------------
 }
