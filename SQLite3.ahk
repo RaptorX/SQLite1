@@ -76,6 +76,44 @@ Class SQLite3 extends SQliteBase {
 		}
 	}
 
+;public methods
+;---------------------
+
+	/**
+	 * Function: Open(path)
+	 * https://www.sqlite.org/c3ref/open.html
+	 *
+	 * Opens an SQLite database file as specified by the filename argument.
+	 * The filename argument is interpreted as UTF-8.
+	 *
+	 * A database connection handle is usually returned in `this.hDatabase`,
+	 * even if an error occurs. The only exception is that if SQLite is unable
+	 * to allocate memory to hold the SQLite3 object, a NULL will be written
+	 * into `this.hDatabase` instead of a pointer to the SQLite3 object.
+	 *
+	 * If the database is opened (and/or created) successfully,
+	 * then SQLITE_OK is returned. Otherwise an error code is returned and the
+	 * error description saved in SQLite3.error.
+	 *
+	 * Params:
+	 * path       - database file location
+	 *
+	 * Returns:
+	 *
+	 * On success - SQLITE_OK
+	 * On Failure - Error code and description in SQLite3.error
+	 */
+	Open(path) {
+		pathBuffer := Buffer(StrPut(path,"utf-8"))
+		StrPut(path,pathBuffer,"utf-8")
+
+		res := DllCall(SQLite3.bin "\sqlite3_open"
+		              ,"ptr", pathBuffer
+		              ,"ptr", this.hDatabase, "cdecl")
+
+		this.hDatabase := NumGet(this.hDatabase, "ptr")
+		return res
+	}
 ;private methods
 ;---------------------
 
