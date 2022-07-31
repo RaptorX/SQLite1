@@ -1,4 +1,4 @@
-#Requires Autohotkey v2.0-
+﻿#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class SQliteBase {
@@ -127,7 +127,7 @@ Class SQLite3 extends SQliteBase {
 	 * Destroys an SQLite3 object.
 	 *
 	 * Ideally, applications should finalize all prepared statements,
-	 * close all BLOB handles, and finish all SQLite3_backup objects
+	 * close all BLOB handles, and finish all sqlite3_backup objects
 	 * associated with the SQLite3 object prior to attempting to close the object.
 	 *
 	 * Params: NONE
@@ -137,7 +137,7 @@ Class SQLite3 extends SQliteBase {
 	 *               all associated resources are deallocated.
 	 * SQLITE_BUSY - Object is associated with unfinalized prepared
 	 *               statements, BLOB handlers, and/or
-	 *               unfinished SQLite3_backup objects.
+	 *               unfinished sqlite3_backup objects.
 	 */
 	Close() {
 		SQLite3.errCode := 0
@@ -148,6 +148,62 @@ Class SQLite3 extends SQliteBase {
 		this.hDatabase := Buffer(A_PtrSize)
 		return SQLite3.ReportResult(res)
 	}
+
+	/**
+	 * Function: Exec(sql)
+	 * https://www.sqlite.org/c3ref/exec.html
+	 *
+	 * This interface is a convenience wrapper around
+	 * sqlite3_prepare_v2(), sqlite3_step(), and sqlite3_finalize(),
+	 * that allows an application to run multiple statements of SQL without
+	 * having to use a lot of code.
+	 *
+	 * It runs zero or more UTF-8 encoded, semicolon-separate SQL statements
+	 * passed into its 2nd argument, in the context of the current database connection.
+	 *
+	 * Params:
+	 * sql          - SQL Statement to be executed
+	 *
+	 * Returns:
+	 * SQLITE_OK    - Statement was executed correctly
+	 * SQLITE_ABORT - Callback function returned non zero value (not implemented)
+	 *
+	 * Notes:
+	 * Any error message written by sqlite3_exec() into memory will be reported
+	 * via SQLite3.errMsg and SQLite3.errCode and an exeption will be thrown.
+	 *
+	 * This allows for try statements like this:
+	 *
+	 * --- ahk ---
+	 * try sql.exec(sqlStatement)
+	 * catch
+	 * 	OutputDebug SQLite3.errMsg
+	 * ---
+	 */
+	Exec(sql, callback:="") {
+		if !IsNumber(this.hDatabase)
+			throw MemberError( "Not connected to a database`n"
+			                 . "Set the path to a database when creating the object or "
+			                 . "use the Open method to connect to a database."
+			                 , A_ThisFunc
+			                 , "hDatabase")
+
+		StrPut(sql,sqlStatement := Buffer(StrPut(sql, "UTF-8")),"UTF-8")
+
+		ObjAddRef(ObjPtr(this))
+		thisObjAddr := ObjPtrAddRef(this)
+
+		res := DllCall(SQLite3.bin "\sqlite3_exec"
+		              ,"ptr" , this.hDatabase
+		              ,"ptr" , sqlStatement
+		              ,"ptr" , callback ? CallbackCreate(callback, "F C",4) : 0
+		              ,"ptr" , thisObjAddr
+		              ,"ptr*", &pErrMsg:=0, "cdecl")
+
+		ObjRelease(thisObjAddr)
+		return SQLite3.ReportResult(res, pErrMsg)
+	}
+
 ;private methods
 ;---------------------
 
