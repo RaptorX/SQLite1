@@ -1,4 +1,4 @@
-#Include <Yunit\Yunit>
+﻿#Include <Yunit\Yunit>
 #Include <Yunit\Window>
 #Include <SQLite\SQLite3>
 
@@ -70,8 +70,8 @@ class SQLiteTests {
 				SQLITE_LOCKED
 			)
 
-			for error in tests
-				Yunit.Assert(SQLite3.ReportResult(error) = error)
+			for errStr in tests
+				Yunit.Assert(SQLite3.ReportResult(errStr) = errStr)
 			
 			tests := Array(
 				"Internal logic error in SQLite",
@@ -81,16 +81,16 @@ class SQLiteTests {
 				"A table in the database is locked"
 			)
 
-			for error in tests
+			for errStr in tests
 			{
-				errBuffer := Buffer(StrPut(error, "UTF-8"))
-				StrPut(error, errBuffer, "UTF-8")
+				errBuffer := Buffer(StrPut(errStr, "UTF-8"))
+				StrPut(errStr, errBuffer, "UTF-8")
 
 				try SQLite3.ReportResult(A_Index, errBuffer)
 				catch
 				{
 					Yunit.Assert(SQLite3.errCode = A_Index)
-					Yunit.Assert(SQLite3.errMsg = error)
+					Yunit.Assert(SQLite3.errMsg == errStr)
 				}
 			}
 		}
