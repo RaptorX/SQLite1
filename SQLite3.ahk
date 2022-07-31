@@ -1,4 +1,4 @@
-﻿#Requires Autohotkey v2.0-
+#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class SQliteBase {
@@ -17,7 +17,7 @@ class SQliteBase {
 	 */
 	__New(dbFile:=unset) {
 		dllBin := A_LineFile "\..\bin\" SQLite3.bin
-		if !SQLite3.ptr := DllCall("LoadLibrary", "str", dllBin)
+		if !this.ptr := DllCall("LoadLibrary", "str", dllBin)
 			throw OSError(A_LastError, "Could not load " dllBin, A_ThisFunc)
 
 		if IsSet(dbFile)
@@ -35,7 +35,7 @@ class SQliteBase {
 	 * Returns: NONE
 	 */
 	__Delete() {
-		DllCall("FreeLibrary", "ptr", SQLite3.ptr)
+		DllCall("FreeLibrary", "ptr", this.ptr)
 	}
 }
 
@@ -44,15 +44,15 @@ Class SQLite3 extends SQliteBase {
 ;private vars
 ;---------------------
 
-	static ptr            := 0
-	static errCode        := 0
-	static errMsg         := ""
 	static bin            := "sqlite3" (A_PtrSize = 4 ? 32 : 64) ".dll"
 
 ;public vars
 ;---------------------
 
-	hDatabase := Buffer(A_PtrSize)
+	ptr            := 0
+	errCode        := 0
+	errMsg         := ""
+	hDatabase      := Buffer(A_PtrSize)
 
 	_autoEscape    := true
 	autoEscape {
@@ -102,12 +102,12 @@ Class SQLite3 extends SQliteBase {
 	 * Returns:
 	 *
 	 * SQLITE_OK     - Operation was successful
-	 * SQLITE_ERROR+ - Error code in SQLite3.errCode and 
-	 *                 error description in SQLite3.errMsg
+	 * SQLITE_ERROR+ - Error code in this.errCode and
+	 *                 error description in this.errMsg
 	 */
 	Open(path) {
-		SQLite3.errCode := 0
-		SQLite3.errMsg  := ""
+		this.errCode := 0
+		this.errMsg  := ""
 
 		StrPut(path
 		      ,pathBuffer:=Buffer(StrPut(path,"UTF-8"))
@@ -146,8 +146,8 @@ Class SQLite3 extends SQliteBase {
 	 *               unfinished sqlite3_backup objects.
 	 */
 	Close() {
-		SQLite3.errCode := 0
-		SQLite3.errMsg  := ""
+		this.errCode := 0
+		this.errMsg  := ""
 		res := DllCall(SQLite3.bin "\sqlite3_close"
 		              ,"ptr", this.hDatabase, "cdecl")
 
@@ -176,14 +176,14 @@ Class SQLite3 extends SQliteBase {
 	 *
 	 * Notes:
 	 * Any error message written by sqlite3_exec() into memory will be reported
-	 * via SQLite3.errMsg and SQLite3.errCode and an exeption will be thrown.
+	 * via this.errMsg and this.errCode and an exeption will be thrown.
 	 *
 	 * This allows for try statements like this:
 	 *
 	 * --- ahk ---
 	 * try sql.exec(sqlStatement)
 	 * catch
-	 * 	OutputDebug SQLite3.errMsg
+	 * 	OutputDebug this.errMsg
 	 * ---
 	 */
 	Exec(sql, callback:="") {
