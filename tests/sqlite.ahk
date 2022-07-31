@@ -1,4 +1,4 @@
-﻿#Include <Yunit\Yunit>
+#Include <Yunit\Yunit>
 #Include <Yunit\Window>
 #Include <SQLite\SQLite3>
 
@@ -6,15 +6,13 @@ Yunit.Use(YunitWindow).Test(SQLiteTests)
 
 class SQLiteTests
 {
-	sql := SQLite3()
-
 	test1_open() {
-		sql := this.sql
+		sql := SQLite3()
 		res := sql.Open("..\examples\example.db")
 		Yunit.Assert(res == SQLITE_OK && IsNumber(sql.hDatabase))
 	}
 	test2_close() {
-		sql := this.sql
+		sql := SQLite3()
 		res := sql.Open("..\examples\example.db")
 		res := sql.Close()
 		Yunit.Assert(res == SQLITE_OK && !IsNumber(sql.hDatabase))
