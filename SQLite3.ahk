@@ -101,8 +101,9 @@ Class SQLite3 extends SQliteBase {
 	 *
 	 * Returns:
 	 *
-	 * On success - SQLITE_OK
-	 * On Failure - Error code and description in SQLite3.error
+	 * SQLITE_OK     - Operation was successful
+	 * SQLITE_ERROR+ - Error code in SQLite3.errCode and 
+	 *                 error description in SQLite3.errMsg
 	 */
 	Open(path) {
 		SQLite3.errCode := 0
@@ -116,8 +117,13 @@ Class SQLite3 extends SQliteBase {
 		              ,"ptr", pathBuffer
 		              ,"ptr", this.hDatabase, "cdecl")
 
-		this.hDatabase := NumGet(this.hDatabase, "ptr")
-		return SQLite3.ReportResult(res)
+		if !this.hDatabase := NumGet(this.hDatabase, "ptr")
+		{
+			errBuffer := Buffer(StrPut(errStr:="Database could not be opened", "UTF-8"))
+			StrPut(errStr, errBuffer, "UTF-8")
+		}
+
+		return SQLite3.ReportResult(res, errBuffer ?? unset)
 	}
 
 	/**
