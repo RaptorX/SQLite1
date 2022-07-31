@@ -16,7 +16,7 @@ class SQLiteTests {
 			sql.Open("..\examples\example.db")
 			Yunit.Assert(sql.Close() = SQLITE_OK && !IsNumber(sql.hDatabase))
 		}
-		test3_createTable(){
+		test3_createTable() {
 			sql := SQLite3()
 			sql.Open("..\examples\example.db")
 
@@ -45,6 +45,36 @@ class SQLiteTests {
 					OutputDebug(SQLite3.errMsg), Yunit.Assert(false)
 			}
 			sql.Close()
+		}
+
+		test4_undefinedMethod() {
+			sql := SQLite3()
+
+			; manual mode not enabled
+			; the library will throw execptions!
+			try
+			{
+				OutputDebug sql.libversion_number()
+				OutputDebug StrGet(sql.libversion("cdecl ptr"),"UTF-8")
+			}
+			catch
+				Yunit.Assert(true)
+
+			; enabling manual mode should return the correct values
+			sql.dllManualMode := true
+			tests := Array(
+				{
+					value:sql.libversion_number(),
+					expected:3039000
+				},
+				{
+					value:StrGet(sql.libversion("cdecl ptr"),"UTF-8"),
+					expected:"3.39.0"
+				}
+			)
+
+			for test in tests
+				OutputDebug Yunit.Assert(test.value = test.expected)
 		}
 	}
 
@@ -99,7 +129,7 @@ class SQLiteTests {
 
 	class Table {
 		sql := SQLite3("A:/Scripts to Work on/CompanyInfo/Crazy Business File.db")
-		
+
 		test1_tableInfo() {
 			sql := this.sql
 
@@ -114,7 +144,7 @@ class SQLiteTests {
 				{value:table.header["Domain"], expected:2},
 				{value:Type(table.row[5]), expected:"Array"}
 			)
-			
+
 			for test in tests
 				Yunit.Assert(test.value = test.expected)
 		}

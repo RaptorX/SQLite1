@@ -1,4 +1,4 @@
-﻿#Requires Autohotkey v2.0-
+#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class SQliteBase {
@@ -24,6 +24,14 @@ class SQliteBase {
 			this.Open(dbFile)
 	}
 
+	__Call(Name, Params) {
+		if !this.dllManualMode
+			throw MemberError(Name " is not implemented yet", A_ThisFunc)
+		
+		res := DllCall(fname:=SQLite3.bin "\sqlite3_" Name, Params*)
+		return SQLite3.ReportResult(res)
+	}
+
 	/**
 	 * Function: __Delete()
 	 * https://lexikos.github.io/v2/docs/Objects.htm#Custom_NewDelete
@@ -44,7 +52,7 @@ Class SQLite3 extends SQliteBase {
 ;private vars
 ;---------------------
 
-	static bin            := "sqlite3" (A_PtrSize = 4 ? 32 : 64) ".dll"
+	static bin     := "sqlite3" (A_PtrSize = 4 ? 32 : 64) ".dll"
 
 ;public vars
 ;---------------------
