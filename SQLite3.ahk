@@ -19,7 +19,7 @@ class SQliteBase {
 		dllBin := A_LineFile "\..\bin\" SQLite3.bin
 		if !SQLite3.ptr := DllCall("LoadLibrary", "str", dllBin)
 			throw OSError(A_LastError, "Could not load " dllBin, A_ThisFunc)
-		
+
 		if IsSet(dbFile)
 			this.Open(dbFile)
 	}
@@ -45,14 +45,15 @@ Class SQLite3 extends SQliteBase {
 ;---------------------
 
 	static ptr            := 0
+	static errCode        := 0
+	static errMsg         := ""
 	static bin            := "sqlite3" (A_PtrSize = 4 ? 32 : 64) ".dll"
-	
 
 ;public vars
 ;---------------------
 
 	hDatabase := Buffer(A_PtrSize)
-	
+
 	_autoEscape    := true
 	autoEscape {
 		get => this._autoEscape
@@ -104,17 +105,21 @@ Class SQLite3 extends SQliteBase {
 	 * On Failure - Error code and description in SQLite3.error
 	 */
 	Open(path) {
-		pathBuffer := Buffer(StrPut(path,"utf-8"))
-		StrPut(path,pathBuffer,"utf-8")
+		SQLite3.errCode := 0
+		SQLite3.errMsg  := ""
+
+		StrPut(path
+		      ,pathBuffer:=Buffer(StrPut(path,"UTF-8"))
+		      ,"UTF-8")
 
 		res := DllCall(SQLite3.bin "\sqlite3_open"
 		              ,"ptr", pathBuffer
 		              ,"ptr", this.hDatabase, "cdecl")
 
 		this.hDatabase := NumGet(this.hDatabase, "ptr")
-		return res
+		return SQLite3.ReportResult(res)
 	}
-	
+
 	/**
 	 * Function: Close()
 	 * https://www.sqlite.org/c3ref/close.html
@@ -135,9 +140,13 @@ Class SQLite3 extends SQliteBase {
 	 *               unfinished SQLite3_backup objects.
 	 */
 	Close() {
-		res := DllCall(SQLite3.bin "\sqlite3_close", "ptr", this.hDatabase, "cdecl")
+		SQLite3.errCode := 0
+		SQLite3.errMsg  := ""
+		res := DllCall(SQLite3.bin "\sqlite3_close"
+		              ,"ptr", this.hDatabase, "cdecl")
+
 		this.hDatabase := Buffer(A_PtrSize)
-		return res
+		return SQLite3.ReportResult(res)
 	}
 ;private methods
 ;---------------------
@@ -154,6 +163,16 @@ Class SQLite3 extends SQliteBase {
 	 * str - Escaped string
 	 */
 	static Escape(str) => StrReplace(str, "'", "''")
+
+	static ReportResult(res, msgBuffer:=unset) {
+		static PREV_FUNC := -2
+		if res = SQLITE_OK || res && !IsSet(msgBuffer)
+			return res
+
+		this.errCode := res
+		this.errMsg  := StrGet(msgBuffer, "UTF-8")
+		throw Error(this.errMsg, PREV_FUNC, this.errCode)
+	}
 
 ;sub classes
 ;---------------------
