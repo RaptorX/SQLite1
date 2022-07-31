@@ -67,5 +67,38 @@ class SQLiteTests
 				Yunit.Assert(eStr == RegExReplace(str, "'", "''"), str "->" eStr)
 			}
 		}
+		test2_reportResult() {
+			tests := Array(
+				SQLITE_INTERNAL,
+				SQLITE_PERM,
+				SQLITE_ABORT,
+				SQLITE_BUSY,
+				SQLITE_LOCKED
+			)
+
+			for error in tests
+				Yunit.Assert(SQLite3.ReportResult(error) = error)
+			
+			tests := Array(
+				"Internal logic error in SQLite",
+				"Access permission denied",
+				"Callback routine requested an abort",
+				"The database file is locked",
+				"A table in the database is locked"
+			)
+
+			for error in tests
+			{
+				errBuffer := Buffer(StrPut(error, "UTF-8"))
+				StrPut(error, errBuffer, "UTF-8")
+
+				try SQLite3.ReportResult(A_Index, errBuffer)
+				catch
+				{
+					Yunit.Assert(SQLite3.errCode = A_Index)
+					Yunit.Assert(SQLite3.errMsg = error)
+				}
+			}
+		}
 	}
 }
