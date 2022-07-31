@@ -199,20 +199,47 @@ Class SQLite3 extends SQliteBase {
 			                 , A_ThisFunc
 			                 , "hDatabase")
 
-		StrPut(sql,sqlStatement := Buffer(StrPut(sql, "UTF-8")),"UTF-8")
+		StrPut(sql
+		      ,sqlStatement:=Buffer(StrPut(sql, "UTF-8"))
+		      ,"UTF-8")
 
-		ObjAddRef(ObjPtr(this))
-		thisObjAddr := ObjPtrAddRef(this)
+		if sql ~= "i)SELECT|PRAGMA"
+		{
+			res := DllCall(SQLite3.bin "\sqlite3_get_table"
+			              ,"ptr" , this.hDatabase
+			              ,"ptr" , sqlStatement
+			              ,"ptr*", &pResult:=0
+			              ,"ptr*", &nRows:=0
+			              ,"ptr*", &nCols:=0
+			              ,"ptr*", &pErrMsg:=0, "cdecl")
 
-		res := DllCall(SQLite3.bin "\sqlite3_exec"
-		              ,"ptr" , this.hDatabase
-		              ,"ptr" , sqlStatement
-		              ,"ptr" , callback ? CallbackCreate(callback, "F C",4) : 0
-		              ,"ptr" , thisObjAddr
-		              ,"ptr*", &pErrMsg:=0, "cdecl")
+			SQLite3.ReportResult(res, pErrMsg)
 
-		ObjRelease(thisObjAddr)
-		return SQLite3.ReportResult(res, pErrMsg)
+			table := SQLite3.Table(pResult, nRows, nCols)
+
+			res := DllCall(SQLite3.bin "\sqlite3_free_table"
+			              ,"ptr", pResult)
+
+			SQLite3.ReportResult(res)
+
+			return table
+		}
+		else
+		{
+
+			ObjAddRef(ObjPtr(this))
+			thisObjAddr := ObjPtrAddRef(this)
+
+			res := DllCall(SQLite3.bin "\sqlite3_exec"
+			              ,"ptr" , this.hDatabase
+			              ,"ptr" , sqlStatement
+			              ,"ptr" , callback ? CallbackCreate(callback, "F C",4) : 0
+			              ,"ptr" , thisObjAddr
+			              ,"ptr*", &pErrMsg:=0, "cdecl")
+
+			ObjRelease(thisObjAddr)
+			return SQLite3.ReportResult(res, pErrMsg)
+		}
 	}
 
 ;private methods
@@ -243,4 +270,90 @@ Class SQLite3 extends SQliteBase {
 
 ;sub classes
 ;---------------------
+	class Table {
+		nRows   := 0
+		nCols   := 0
+
+		headers := Array()
+		header[value] {
+			get {
+				switch Type(value) {
+					case "Integer":
+						return this.headers[value]
+					case "String":
+						return SQLite3.Table.GetHeaderIndex(this, value)
+					default:
+						throw ValueError( "Invalid value type.`n"
+						                . "Expected: integer or string values."
+						                , A_ThisFunc
+						                , Type(value))
+				}
+			}
+		}
+
+		rows := Array()
+		row[n] => this.rows[n]
+
+		fields := Array()
+		cell[row,col] => this.field[row, col]
+		field[row,col] {
+			get {
+				if Type(row) != "Integer"
+				|| !(Type(col) ~= "i)Integer|String")
+					throw ValueError( "Invalid value type.`n"
+					                . "Row must be an Integer`n"
+					                . "Col Must be an integer or string."
+					                , A_ThisFunc
+					                , "Row: " Type(row) "`nCol: " Type(col))
+
+				if row > this.nRows || row < 1
+				|| col > this.nCols || col < 1
+					throw ValueError( "Invalid range."
+					                , A_ThisFunc
+					                , "The value must be between 0 and the max row/col.")
+
+				if Type(col) = "String"
+					col := this.header[col]
+
+				return this.rows[row][col]
+			}
+		}
+
+		data => Array(this.headers, this.rows)
+
+		__New(tblPointer, nRows, nCols) {
+			this.nCols := nCols
+			this.nRows := nRows
+
+			OffSet := 0 - A_PtrSize
+			loop (nRows+1) * nCols
+			{
+				; We need to handle NULL data
+				if !nxtPtr:=NumGet(tblPointer, OffSet += A_PtrSize, "ptr")
+					data := ""
+				else
+					data := StrGet(nxtPtr, "UTF-8")
+
+				if A_Index <= nCols
+					this.headers.Push(data)
+				else
+				{
+					tempData .= data A_Tab
+					this.fields.Push(data)
+
+					if !Mod(A_Index, nCols)
+					{
+						this.rows.Push(StrSplit(Trim(tempData), A_Tab))
+						tempData := ""
+					}
+				}
+			}
+		}
+
+		static GetHeaderIndex(table, str) {
+			for header in table.headers
+				if str = header
+					return A_Index
+		}
+	}
 }

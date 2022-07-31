@@ -1,4 +1,4 @@
-#Include <Yunit\Yunit>
+﻿#Include <Yunit\Yunit>
 #Include <Yunit\Window>
 #Include <SQLite\SQLite3>
 
@@ -73,7 +73,7 @@ class SQLiteTests {
 
 			for errStr in tests
 				Yunit.Assert(SQLite3.ReportResult(errStr) = errStr)
-			
+
 			tests := Array(
 				"Internal logic error in SQLite",
 				"Access permission denied",
@@ -94,6 +94,40 @@ class SQLiteTests {
 					Yunit.Assert(SQLite3.errMsg == errStr)
 				}
 			}
+		}
+	}
+
+	class Table {
+		sql := SQLite3("A:/Scripts to Work on/CompanyInfo/Crazy Business File.db")
+		
+		test1_tableInfo() {
+			sql := this.sql
+
+			try table := sql.Exec("SELECT UserNames,Domain FROM DATA WHERE country='denmark'")
+			catch
+				OutputDebug(SQLite3.errCode " " SQLite3.errMsg), Yunit.Assert(false)
+
+			tests := Array(
+				{value:table.nRows, expected:29221},
+				{value:table.rows.Length, expected:table.nRows},
+				{value:table.headers[1], expected:"UserNames"},
+				{value:table.header["Domain"], expected:2},
+				{value:Type(table.row[5]), expected:"Array"}
+			)
+			
+			for test in tests
+				Yunit.Assert(test.value = test.expected)
+		}
+
+		test2_getHeaderIndex() {
+			sql := this.sql
+
+			try table := sql.Exec("SELECT UserNames,Domain FROM DATA WHERE country='denmark'")
+			catch
+				OutputDebug(SQLite3.errCode " " SQLite3.errMsg), Yunit.Assert(false)
+
+			index := SQLite3.Table.GetHeaderIndex(table, "Domain")
+			Yunit.Assert(index = 2)
 		}
 	}
 }
