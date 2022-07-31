@@ -58,22 +58,26 @@ Class SQLite3 extends SQliteBase {
 	autoEscape {
 		get => this._autoEscape
 		set {
-			static errMsg := "This property only accepts true or false"
-			if !(value ~= true "|" false)
-				throw ValueError(errMsg, -1, A_ThisFunc "> autoEscape")
-			else
+			switch Value {
+			case true,false:
 				return this._autoEscape := value
+			default:
+				throw ValueError("This property only accepts true or false"
+				                ,A_ThisFunc, "autoEscape:" Value)
+			}
 		}
 	}
 	_dllManualMode := false
 	dllManualMode {
 		get => this._dllManualMode
 		set {
-			static errMsg := "This property only accepts true or false"
-			if !(value ~= true "|" false)
-				throw ValueError(errMsg, -1, A_ThisFunc "> dllManualMode")
-			else
-				return this._dllManualMode := value
+			switch Value {
+			case true,false:
+				return this._dllManualMode := Value
+			default:
+				throw ValueError("This property only accepts true or false"
+				                ,A_ThisFunc, "dllManualMode: " Value)
+			}
 		}
 	}
 
@@ -119,8 +123,9 @@ Class SQLite3 extends SQliteBase {
 
 		if !this.hDatabase := NumGet(this.hDatabase, "ptr")
 		{
-			errBuffer := Buffer(StrPut(errStr:="Database could not be opened", "UTF-8"))
-			StrPut(errStr, errBuffer, "UTF-8")
+			StrPut(errStr:="Database could not be opened"
+			      ,errBuffer:=Buffer(StrPut(errStr, "UTF-8"))
+			      ,"UTF-8")
 		}
 
 		return SQLite3.ReportResult(res, errBuffer ?? unset)
