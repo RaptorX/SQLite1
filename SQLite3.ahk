@@ -1,4 +1,4 @@
-#Requires Autohotkey v2.0-
+﻿#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class SQliteBase {
@@ -270,6 +270,65 @@ Class SQLite3 extends SQliteBase {
 
 ;sub classes
 ;---------------------
+	/**
+	* Class: Table
+	* https://www.sqlite.org/c3ref/free_table.html
+	*
+	* Implements a simple table structure used to access data returned
+	* by any SQL statement that returns rows of data.
+	*
+	* Property: nRows
+	* Number of rows in the table
+	* 
+	* Property: nCols
+	* Number of columns in the table
+	* 
+	* Property: headers
+	* An array that contains the headers of the returned table
+	*
+	* Property: header[value]
+	* Returns either the header name or header index based on the value passed
+	*
+	* value - Integer / String
+	*
+	*         If an integer is passed, the name of the header is returned
+	*
+	*         If a string is passed, the index of the header is returned
+	*
+	* Property: rows
+	* An array that contains a list of `rows` that are arrays of each field.
+	* The length of the `row` array will be the same as the number of columns.
+	*
+	* Property: row[n]
+	* Returns an array that represents the `row` passed as n.
+	* The length of the `row` array will be the same as the number of columns.
+	* 
+	* Property: fields
+	* An array of each field in the table result returned by SQlite.
+	*
+	* This property can be used to loop through the entire table quickly.
+	*
+	* Property: field[row,col]
+	* Returns a specific field by specifying a row and column.
+	*
+	* row - Integer
+	* col - Integer / String
+	*
+	* Property: cell[row,col]
+	* A sysnonym for <field>
+	* Returns a specific cell by specifying a row and column.
+	*
+	* row - Integer
+	* col - Integer / String
+	*
+	* Property: data
+	* An array that represents the full table.
+	* The first index contains the same information as SQLite3.Table.headers.
+	* The second index contains the same information as SQLite3.Table.rows.
+	*
+	* Static Method: GetHeaderIndex
+	* Returns the index of a string that refers to a specific header in a table.
+	*/
 	class Table {
 		nRows   := 0
 		nCols   := 0
