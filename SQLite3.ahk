@@ -1,4 +1,4 @@
-#Requires Autohotkey v2.0-
+﻿#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class SQliteBase {
@@ -24,6 +24,37 @@ class SQliteBase {
 			this.Open(dbFile)
 	}
 
+	/**
+	 * Function: __Call(Name, Params)
+	 * https://lexikos.github.io/v2/docs/Objects.htm#Meta_Functions
+	 *
+	 * Used to manage functions that havent been defined yet.
+	 * By default this meta function will throw an error for all non defined
+	 * methods.
+	 *
+	 * This can be overridden by setting the `this.dllManualMode` option to `true`.
+	 *
+	 * Must be used with care as you will have to understand the underlying
+	 * DllCall that will be made.
+	 *
+	 * When manual mode is enabled you will call your method normally but each
+	 * parameter must be acompanied by its type, exactly as DllCall would expect.
+	 *
+	 * --- ahk
+	 * sqlite3.get_table("ptr" , sqlite3.hDatabase
+	 *                  ,"ptr" , sqlStatement
+	 *                  ,"ptr*", &pResult:=0
+	 *                  ,"ptr*", &nRows:=0
+	 *                  ,"ptr*", &nCols:=0
+	 *                  ,"ptr*", &pErrMsg:=0, "cdecl")
+	 * ---
+	 * 
+	 * Params:
+	 * Name   - The name of the method without the sqlite3_ prefix.
+	 * Params - An Array of parameters. This includes only the parameters between () or [], so may be empty.
+	 *
+	 * Returns: USER DEFINED
+	 */
 	__Call(Name, Params) {
 		if !this.dllManualMode
 			throw MemberError(Name " is not implemented yet", A_ThisFunc)
