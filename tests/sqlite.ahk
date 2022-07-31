@@ -1,4 +1,4 @@
-﻿#Include <Yunit\Yunit>
+#Include <Yunit\Yunit>
 #Include <Yunit\Window>
 #Include <SQLite\SQLite3>
 
@@ -52,5 +52,20 @@ class SQLiteTests
 				OutputDebug(SQLite3.errMsg), Yunit.Assert(false)
 		}
 		sql.Close()
+
+	class StaticMethods {
+		test1_escape() {
+			tests := Array(
+				"one's type",
+				"leo's",
+				"his cars' info"
+			)
+
+			for str in tests
+			{
+				eStr := SQLite3.Escape(str)
+				Yunit.Assert(eStr == RegExReplace(str, "'", "''"), str "->" eStr)
+			}
+		}
 	}
 }
