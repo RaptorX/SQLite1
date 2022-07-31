@@ -1,4 +1,4 @@
-﻿#Include <Yunit\Yunit>
+#Include <Yunit\Yunit>
 #Include <Yunit\Window>
 #Include <SQLite\SQLite3>
 
@@ -33,7 +33,8 @@ class SQLiteTests {
 					weight    INTEGER
 					`);"
 				),
-				"SELECT id FROM person WHERE TRUE",
+				"INSERT INTO person ('name','last_name') VALUES('Isaias','Baez')",
+				"SELECT id,name FROM person WHERE TRUE",
 				"DROP TABLE IF EXISTS person"
 			)
 
