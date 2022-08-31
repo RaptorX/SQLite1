@@ -1,4 +1,4 @@
-﻿#Requires Autohotkey v2.0-
+#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class SQliteBase {
@@ -60,7 +60,7 @@ class SQliteBase {
 			throw MemberError(Name " is not implemented yet", A_ThisFunc)
 		
 		res := DllCall(fname:=SQLite3.bin "\sqlite3_" Name, Params*)
-		return SQLite3.ReportResult(res)
+		return SQLite3.ReportResult(this, res)
 	}
 
 	/**
@@ -99,7 +99,7 @@ Class SQLite3 extends SQliteBase {
 		set {
 			switch Value {
 			case true,false:
-				return this._autoEscape := value
+				return this._autoEscape := Value
 			default:
 				throw ValueError("This property only accepts true or false"
 				                ,A_ThisFunc, "autoEscape:" Value)
@@ -137,7 +137,7 @@ Class SQLite3 extends SQliteBase {
 	 *
 	 * If the database is opened (and/or created) successfully,
 	 * then SQLITE_OK is returned. Otherwise an error code is returned and the
-	 * error description saved in SQLite3.error.
+	 * error description saved in this.errMsg.
 	 *
 	 * Params:
 	 * path       - database file location
@@ -167,7 +167,7 @@ Class SQLite3 extends SQliteBase {
 			      ,"UTF-8")
 		}
 
-		return SQLite3.ReportResult(res, errBuffer ?? unset)
+		return SQLite3.ReportResult(this, res, errBuffer ?? unset)
 	}
 
 	/**
@@ -196,7 +196,7 @@ Class SQLite3 extends SQliteBase {
 		              ,"ptr", this.hDatabase, "cdecl")
 
 		this.hDatabase := Buffer(A_PtrSize)
-		return SQLite3.ReportResult(res)
+		return SQLite3.ReportResult(this, res)
 	}
 
 	/**
@@ -277,7 +277,7 @@ Class SQLite3 extends SQliteBase {
 			              ,"ptr*", &pErrMsg:=0, "cdecl")
 
 			ObjRelease(thisObjAddr)
-			return SQLite3.ReportResult(res, pErrMsg)
+			return SQLite3.ReportResult(this, res, pErrMsg)
 		}
 	}
 
@@ -297,14 +297,17 @@ Class SQLite3 extends SQliteBase {
 	 */
 	static Escape(str) => StrReplace(str, "'", "''")
 
-	static ReportResult(res, msgBuffer:=unset) {
+	static ReportResult(obj, res, msgBuffer:=unset) {
 		static PREV_FUNC := -2
 		if res = SQLITE_OK || res && !IsSet(msgBuffer)
 			return res
 
-		this.errCode := res
-		this.errMsg  := StrGet(msgBuffer, "UTF-8")
-		throw Error(this.errMsg, PREV_FUNC, this.errCode)
+		obj.errCode := res
+		obj.errMsg  := StrGet(msgBuffer, "UTF-8")
+		throw Error(obj.errMsg, PREV_FUNC, obj.errCode)
+	}
+	
+	static GetTable(obj, sql) {
 	}
 
 ;sub classes

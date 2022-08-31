@@ -93,6 +93,7 @@ class SQLiteTests {
 			}
 		}
 		test2_reportResult() {
+			sql := SQLite3()
 			tests := Array(
 				SQLITE_INTERNAL,
 				SQLITE_PERM,
@@ -102,7 +103,7 @@ class SQLiteTests {
 			)
 
 			for errStr in tests
-				Yunit.Assert(SQLite3.ReportResult(errStr) = errStr)
+				Yunit.Assert(SQLite3.ReportResult(sql, errStr) = errStr)
 
 			tests := Array(
 				"Internal logic error in SQLite",
@@ -117,11 +118,11 @@ class SQLiteTests {
 				errBuffer := Buffer(StrPut(errStr, "UTF-8"))
 				StrPut(errStr, errBuffer, "UTF-8")
 
-				try SQLite3.ReportResult(A_Index, errBuffer)
+				try SQLite3.ReportResult(sql, A_Index, errBuffer)
 				catch
 				{
-					Yunit.Assert(SQLite3.errCode = A_Index)
-					Yunit.Assert(SQLite3.errMsg == errStr)
+					Yunit.Assert(sql.errCode = A_Index)
+					Yunit.Assert(sql.errMsg == errStr)
 				}
 			}
 		}
