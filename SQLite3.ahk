@@ -301,7 +301,7 @@ Class SQLite3 extends IBase {
 	 * Returns:
 	 * str - Escaped string
 	 */
-	static Escape(str) => StrReplace(str, "'", "''")
+	static Escape(str, autoTrim:=true) => StrReplace(autoTrim ? Trim(str) : str, "'", "''")
 
 	static ReportResult(obj, res, msgBuffer:=unset) {
 		static PREV_FUNC := -2
