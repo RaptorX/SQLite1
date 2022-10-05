@@ -1,4 +1,4 @@
-#Requires Autohotkey v2.0-
+﻿#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class IBase {
@@ -15,13 +15,13 @@ class IBase {
 	 *
 	 * Returns: NONE
 	 */
-	__New(dbFile:=unset) {
+	__New(dbFile:=unset, overwrite:=false) {
 		dllBin := A_LineFile "\..\bin\" SQLite3.bin
 		if !this.ptr := DllCall("LoadLibrary", "str", dllBin)
 			throw OSError(A_LastError, "Could not load " dllBin, A_ThisFunc)
 
 		if IsSet(dbFile)
-			this.Open(dbFile)
+			this.Open(dbFile, overwrite)
 	}
 
 	/**
@@ -146,13 +146,16 @@ Class SQLite3 extends IBase {
 	 * SQLITE_ERROR+ - Error code in this.errCode and
 	 *                 error description in this.errMsg
 	 */
-	Open(path) {
+	Open(path, overwrite:=false) {
 		this.errCode := 0
 		this.errMsg  := ""
 
 		StrPut(path
 		      ,pathBuffer:=Buffer(StrPut(path,"UTF-8"))
 		      ,"UTF-8")
+
+		if overwrite
+			try FileDelete path
 
 		res := DllCall(SQLite3.bin "\sqlite3_open"
 		              ,"ptr", pathBuffer
@@ -265,13 +268,13 @@ Class SQLite3 extends IBase {
 	 * https://www.sqlite.org/c3ref/free_table.html
 	 *
 	 * This is a legacy interface. The Use of this interface is not recommended.
-	 * 
+	 *
 	 * Definition: A result table is memory data structure created by the sqlite3_get_table() interface.
 	 * A result table records the complete query results from one or more queries.
-	 * 
+	 *
 	 * This method return a <Sqlite3.Table> object.
 	 *
-	 * Params: 
+	 * Params:
 	 * sql - SQLITE statement that returns a table
 	 *
 	 * Returns:
