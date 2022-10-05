@@ -73,9 +73,7 @@ class IBase {
 	 * Params: NONE
 	 * Returns: NONE
 	 */
-	__Delete() {
-		DllCall("FreeLibrary", "ptr", this.ptr)
-	}
+	__Delete() => DllCall("FreeLibrary", "ptr", this.ptr)
 }
 
 Class SQLite3 extends IBase {
