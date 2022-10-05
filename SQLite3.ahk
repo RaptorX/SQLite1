@@ -1,7 +1,7 @@
 #Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
-class SQliteBase {
+class IBase {
 	/**
 	 * Function: __New(dbFile:=unset)
 	 * https://lexikos.github.io/v2/docs/Objects.htm#Custom_NewDelete
@@ -48,7 +48,7 @@ class SQliteBase {
 	 *                  ,"ptr*", &nCols:=0
 	 *                  ,"ptr*", &pErrMsg:=0, "cdecl")
 	 * ---
-	 * 
+	 *
 	 * Params:
 	 * Name   - The name of the method without the sqlite3_ prefix.
 	 * Params - An Array of parameters. This includes only the parameters between () or [], so may be empty.
@@ -58,7 +58,7 @@ class SQliteBase {
 	__Call(Name, Params) {
 		if !this.dllManualMode
 			throw MemberError(Name " is not implemented yet", A_ThisFunc)
-		
+
 		res := DllCall(fname:=SQLite3.bin "\sqlite3_" Name, Params*)
 		return SQLite3.ReportResult(this, res)
 	}
@@ -78,7 +78,7 @@ class SQliteBase {
 	}
 }
 
-Class SQLite3 extends SQliteBase {
+Class SQLite3 extends IBase {
 
 ;private vars
 ;---------------------
@@ -242,27 +242,8 @@ Class SQLite3 extends SQliteBase {
 		      ,sqlStatement:=Buffer(StrPut(sql, "UTF-8"))
 		      ,"UTF-8")
 
-		if sql ~= "i)SELECT|PRAGMA"
-		{
-			res := DllCall(SQLite3.bin "\sqlite3_get_table"
-			              ,"ptr" , this.hDatabase
-			              ,"ptr" , sqlStatement
-			              ,"ptr*", &pResult:=0
-			              ,"ptr*", &nRows:=0
-			              ,"ptr*", &nCols:=0
-			              ,"ptr*", &pErrMsg:=0, "cdecl")
-
-			SQLite3.ReportResult(res, pErrMsg)
-
-			table := SQLite3.Table(pResult, nRows, nCols)
-
-			res := DllCall(SQLite3.bin "\sqlite3_free_table"
-			              ,"ptr", pResult)
-
-			SQLite3.ReportResult(res)
-
-			return table
-		}
+		if sql ~= "i)SELECT"
+			return SQLite3.GetTable(this, sqlStatement)
 		else
 		{
 
@@ -279,6 +260,31 @@ Class SQLite3 extends SQliteBase {
 			ObjRelease(thisObjAddr)
 			return SQLite3.ReportResult(this, res, pErrMsg)
 		}
+	}
+
+	/**
+	 * Function: GetTable(sql)
+	 * https://www.sqlite.org/c3ref/free_table.html
+	 *
+	 * This is a legacy interface. The Use of this interface is not recommended.
+	 * 
+	 * Definition: A result table is memory data structure created by the sqlite3_get_table() interface.
+	 * A result table records the complete query results from one or more queries.
+	 * 
+	 * This method return a <Sqlite3.Table> object.
+	 *
+	 * Params: 
+	 * sql - SQLITE statement that returns a table
+	 *
+	 * Returns:
+	 * Sqlite3.Table object - For more information check the <Sqlite3.Table> information.
+	 */
+	GetTable(sql) {
+		StrPut(sql
+		      ,sqlStatement:=Buffer(StrPut(sql, "UTF-8"))
+		      ,"UTF-8")
+
+		return SQLite3.GetTable(this, sqlStatement)
 	}
 
 ;private methods
@@ -306,8 +312,29 @@ Class SQLite3 extends SQliteBase {
 		obj.errMsg  := StrGet(msgBuffer, "UTF-8")
 		throw Error(obj.errMsg, PREV_FUNC, obj.errCode)
 	}
-	
-	static GetTable(obj, sql) {
+
+	static GetTable(obj, sqlBuffer) {
+		obj.errCode := 0
+		obj.errMsg  := ""
+
+		res := DllCall(SQLite3.bin "\sqlite3_get_table"
+		              ,"ptr" , obj.hDatabase
+		              ,"ptr" , sqlBuffer
+		              ,"ptr*", &pResult:=0
+		              ,"ptr*", &nRows:=0
+		              ,"ptr*", &nCols:=0
+		              ,"ptr*", &pErrMsg:=0, "cdecl")
+
+		SQLite3.ReportResult(obj, res, pErrMsg)
+
+		table := SQLite3.Table(pResult, nRows, nCols)
+
+		res := DllCall(SQLite3.bin "\sqlite3_free_table"
+		              ,"ptr", pResult)
+
+		SQLite3.ReportResult(obj, res)
+
+		return table
 	}
 
 ;sub classes
@@ -321,10 +348,10 @@ Class SQLite3 extends SQliteBase {
 	*
 	* Property: nRows
 	* Number of rows in the table
-	* 
+	*
 	* Property: nCols
 	* Number of columns in the table
-	* 
+	*
 	* Property: headers
 	* An array that contains the headers of the returned table
 	*
@@ -344,7 +371,7 @@ Class SQLite3 extends SQliteBase {
 	* Property: row[n]
 	* Returns an array that represents the `row` passed as n.
 	* The length of the `row` array will be the same as the number of columns.
-	* 
+	*
 	* Property: fields
 	* An array of each field in the table result returned by SQlite.
 	*
