@@ -1,19 +1,22 @@
-﻿#Requires Autohotkey v2.0-
+#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class IBase {
 	/**
-	 * Function: __New(dbFile:=unset)
-	 * https://lexikos.github.io/v2/docs/Objects.htm#Custom_NewDelete
-	 *
 	 * Used to manage automatic loading of a database file when
 	 * instatiating the class by passing the `dbFile` parameter
 	 * with a path to a valid SQlite database file.
 	 *
-	 * Params:
-	 * dbFile [optional] - Path to the database file to be opened
+	 * [Documentation](https://lexikos.github.io/v2/docs/Objects.htm#Custom_NewDelete)
 	 *
-	 * Returns: NONE
+	 * ---
+	 * ### Params:
+	 * - `dbFile [optional]`    - Path to the database file to be opened
+	 * - `overwrite [optional]` - delete the existing db file if exists
+	 *
+	 * ### Returns:
+	 * - `NONE`
+	 *
 	 */
 	__New(dbFile:=unset, overwrite:=false) {
 		dllBin := A_LineFile "\..\bin\" SQLite3.bin
@@ -25,14 +28,10 @@ class IBase {
 	}
 
 	/**
-	 * Function: __Call(Name, Params)
-	 * https://lexikos.github.io/v2/docs/Objects.htm#Meta_Functions
+	 * Used to manage functions that haven't been defined yet.
 	 *
-	 * Used to manage functions that havent been defined yet.
 	 * By default this meta function will throw an error for all non defined
-	 * methods.
-	 *
-	 * This can be overridden by setting the `this.dllManualMode` option to `true`.
+	 * methods. This can be overridden by setting the `this.dllManualMode` option to `true`.
 	 *
 	 * Must be used with care as you will have to understand the underlying
 	 * DllCall that will be made.
@@ -40,20 +39,29 @@ class IBase {
 	 * When manual mode is enabled you will call your method normally but each
 	 * parameter must be acompanied by its type, exactly as DllCall would expect.
 	 *
-	 * --- ahk
-	 * sqlite3.get_table("ptr" , sqlite3.hDatabase
-	 *                  ,"ptr" , sqlStatement
-	 *                  ,"ptr*", &pResult:=0
-	 *                  ,"ptr*", &nRows:=0
-	 *                  ,"ptr*", &nCols:=0
-	 *                  ,"ptr*", &pErrMsg:=0, "cdecl")
+	 * [Documentation](https://lexikos.github.io/v2/docs/Objects.htm#Meta_Functions)
+	 *
 	 * ---
+	 * ### Params:
+	 * - `Name`   - The name of the method without the sqlite3_ prefix.
+	 * - `Params` - DllCall style parameters
 	 *
-	 * Params:
-	 * Name   - The name of the method without the sqlite3_ prefix.
-	 * Params - An Array of parameters. This includes only the parameters between () or [], so may be empty.
+	 * ### Returns:
+	 * - `Library Defined` - For mor information see each function's documentation
+	 * ---
+	 * ### Examples:
+	 * Use the slqite3_get_table function directly as defined in the original library
+	 * ```
+	 sql := sqlite3('data.db')
+	 sql.dllManualMode := true
+	 sql.get_table("ptr" , sql.hDatabase
+	              ,"ptr" , sqlStatement
+	              ,"ptr*", &pResult:=0
+	              ,"ptr*", &nRows:=0
+	              ,"ptr*", &nCols:=0
+	              ,"ptr*", &pErrMsg:=0, "cdecl")
+	 * ```
 	 *
-	 * Returns: USER DEFINED
 	 */
 	__Call(Name, Params) {
 		if !this.dllManualMode
@@ -64,27 +72,47 @@ class IBase {
 	}
 
 	/**
-	 * Function: __Delete()
-	 * https://lexikos.github.io/v2/docs/Objects.htm#Custom_NewDelete
-	 *
 	 * When an object is destroyed, __Delete is called.
+	 *
 	 * Used to clean up after the object is no longer in use.
 	 *
-	 * Params: NONE
-	 * Returns: NONE
+	 * [Documentation](https://lexikos.github.io/v2/docs/Objects.htm#Custom_NewDelete)
+	 *
+	 *---
+	 * ### Params:
+	 * - `NONE`
+	 *
+	 * ### Returns:
+	 * - `NONE`
+	 *
 	 */
 	__Delete() => DllCall("FreeLibrary", "ptr", this.ptr)
 }
 
+/**
+ * Sqlite 3 Interface object that makes it easy to work with sqlite databases in Autohotkey v2.
+ *
+ * ---
+ * ### Properties:
+ * - `ptr`            - Copy of the current database pointer
+ * - `errCode`        - Error code returned by the library (if any ) after last operation
+ * - `errMsg`         - Error message returned by the library (if any ) after last operation
+ * - `autoEscape`     - Option to automatically escape all strings passed to the library.
+ *                      Enabled by default
+ * - `dllManualMode`  - Option to call library functions that havent been defined by the
+ *                      class yet. Disabled by default.
+ *
+ * ### Methods:
+ * - `Open`     - Opens a database
+ * - `Close`    - Closes a database 
+ * - `Exec`     - Executes an arbitrary SQL Statement that conforms to the sqlite3 engine
+ *
+ * ### Implemented functions:
+ * - `GetTable`
+ *
+ */
 Class SQLite3 extends IBase {
-
-;private vars
-;---------------------
-
 	static bin     := "sqlite3" (A_PtrSize = 4 ? 32 : 64) ".dll"
-
-;public vars
-;---------------------
 
 	ptr            := 0
 	errCode        := 0
@@ -118,33 +146,33 @@ Class SQLite3 extends IBase {
 		}
 	}
 
-;public methods
-;---------------------
-
 	/**
-	 * Function: Open(path)
-	 * https://www.sqlite.org/c3ref/open.html
-	 *
 	 * Opens an SQLite database file as specified by the filename argument.
+	 *
 	 * The filename argument is interpreted as UTF-8.
 	 *
 	 * A database connection handle is usually returned in `this.hDatabase`,
 	 * even if an error occurs. The only exception is that if SQLite is unable
-	 * to allocate memory to hold the SQLite3 object, a NULL will be written
+	 * to allocate memory to hold the SQLite3 object, a `NULL` will be written
 	 * into `this.hDatabase` instead of a pointer to the SQLite3 object.
 	 *
 	 * If the database is opened (and/or created) successfully,
-	 * then SQLITE_OK is returned. Otherwise an error code is returned and the
-	 * error description saved in this.errMsg.
+	 * then `SQLITE_OK` is returned. Otherwise an error code is returned and the
+	 * error description saved in `this.errMsg`.
 	 *
-	 * Params:
-	 * path       - database file location
+	 * [Documentation](https://www.sqlite.org/c3ref/open.html)
 	 *
-	 * Returns:
+	 * ---
+	 * ### Params:
+	 * - `path`       - database file location
+	 * - `overwrite`  - delete the existing db file if exists
 	 *
-	 * SQLITE_OK     - Operation was successful
-	 * SQLITE_ERROR+ - Error code in this.errCode and
-	 *                 error description in this.errMsg
+	 * ### Returns:
+	 *
+	 * - `SQLITE_OK`     - Operation was successful
+	 * - `SQLITE_ERROR+` - Error code in this.errCode and
+	 *                     error description in this.errMsg
+	 *
 	 */
 	Open(path, overwrite:=false) {
 		this.errCode := 0
@@ -172,23 +200,25 @@ Class SQLite3 extends IBase {
 	}
 
 	/**
-	 * Function: Close()
-	 * https://www.sqlite.org/c3ref/close.html
-	 *
 	 * Destroys an SQLite3 object.
 	 *
 	 * Ideally, applications should finalize all prepared statements,
 	 * close all BLOB handles, and finish all sqlite3_backup objects
 	 * associated with the SQLite3 object prior to attempting to close the object.
 	 *
-	 * Params: NONE
+	 * [Documentation](https://www.sqlite.org/c3ref/close.html)
 	 *
-	 * Returns:
-	 * SQLITE_OK   - Object is successfully destroyed and
-	 *               all associated resources are deallocated.
-	 * SQLITE_BUSY - Object is associated with unfinalized prepared
-	 *               statements, BLOB handlers, and/or
-	 *               unfinished sqlite3_backup objects.
+	 * ---
+	 * ### Params:
+	 * - `NONE`
+	 *
+	 * ### Returns:
+	 * - `SQLITE_OK`   - Object is successfully destroyed and
+	 *                   all associated resources are deallocated.
+	 * - `SQLITE_BUSY` - Object is associated with unfinalized prepared
+	 *                   statements, BLOB handlers, and/or
+	 *                   unfinished sqlite3_backup objects.
+	 *
 	 */
 	Close() {
 		this.errCode := 0
@@ -201,35 +231,35 @@ Class SQLite3 extends IBase {
 	}
 
 	/**
-	 * Function: Exec(sql)
-	 * https://www.sqlite.org/c3ref/exec.html
-	 *
 	 * This interface is a convenience wrapper around
-	 * sqlite3_prepare_v2(), sqlite3_step(), and sqlite3_finalize(),
+	 * `sqlite3_prepare_v2()`, `sqlite3_step()`, and `sqlite3_finalize()`,
 	 * that allows an application to run multiple statements of SQL without
 	 * having to use a lot of code.
 	 *
 	 * It runs zero or more UTF-8 encoded, semicolon-separate SQL statements
 	 * passed into its 2nd argument, in the context of the current database connection.
 	 *
-	 * Params:
-	 * sql          - SQL Statement to be executed
+	 * [Documentation](https://www.sqlite.org/c3ref/exec.html)
 	 *
-	 * Returns:
-	 * SQLITE_OK    - Statement was executed correctly
-	 * SQLITE_ABORT - Callback function returned non zero value (not implemented)
+	 * ---
+	 * ### Params:
+	 * - `sql`          - SQL Statement to be executed
 	 *
-	 * Notes:
-	 * Any error message written by sqlite3_exec() into memory will be reported
-	 * via this.errMsg and this.errCode and an exeption will be thrown.
+	 * ### Returns:
+	 * - `SQLITE_OK`    - Statement was executed correctly
+	 * - `SQLITE_ABORT` - Callback function returned non zero value (not implemented)
+	 *
+	 * ### Notes:
+	 * Any error message written by `sqlite3_exec()` into memory will be reported
+	 * via `this.errMsg` and `this.errCode` and an exeption will be thrown.
 	 *
 	 * This allows for try statements like this:
 	 *
-	 * --- ahk ---
-	 * try sql.exec(sqlStatement)
-	 * catch
-	 * 	OutputDebug this.errMsg
-	 * ---
+	 * ```
+	try sql.exec(sqlStatement)
+	catch
+		OutputDebug this.errMsg
+	 * ```
 	 */
 	Exec(sql, callback:="") {
 		if !IsNumber(this.hDatabase)
@@ -264,21 +294,22 @@ Class SQLite3 extends IBase {
 	}
 
 	/**
-	 * Function: GetTable(sql)
-	 * https://www.sqlite.org/c3ref/free_table.html
-	 *
 	 * This is a legacy interface. The Use of this interface is not recommended.
 	 *
-	 * Definition: A result table is memory data structure created by the sqlite3_get_table() interface.
+	 * Definition: A result table is memory data structure created by the `sqlite3_get_table()` interface.
 	 * A result table records the complete query results from one or more queries.
 	 *
 	 * This method return a <Sqlite3.Table> object.
 	 *
-	 * Params:
-	 * sql - SQLITE statement that returns a table
+	 * [Documentation](https://www.sqlite.org/c3ref/free_table.html)
 	 *
-	 * Returns:
-	 * Sqlite3.Table object - For more information check the <Sqlite3.Table> information.
+	 * ---
+	 * ### Params:
+	 * - `sql` - SQLITE statement that returns a table
+	 *
+	 * ### Returns:
+	 * - `Sqlite3.Table` object - For more information check the <Sqlite3.Table> information.
+	 *
 	 */
 	GetTable(sql) {
 		StrPut(sql
@@ -292,15 +323,13 @@ Class SQLite3 extends IBase {
 ;---------------------
 
 	/**
-	 * Function: Escape(str)
-	 *
 	 * This function escapes all single quotes from SQL strings.
 	 *
-	 * Params:
-	 * str - String to be escaped
+	 * ### Params:
+	 * - `str` - String to be escaped
 	 *
-	 * Returns:
-	 * str - Escaped string
+	 * ### Returns:
+	 * - `str` - Escaped string
 	 */
 	static Escape(str, autoTrim:=true) => StrReplace(autoTrim ? Trim(str) : str, "'", "''")
 
@@ -338,66 +367,40 @@ Class SQLite3 extends IBase {
 		return table
 	}
 
-;sub classes
-;---------------------
 	/**
-	* Class: Table
-	* https://www.sqlite.org/c3ref/free_table.html
-	*
 	* Implements a simple table structure used to access data returned
 	* by any SQL statement that returns rows of data.
 	*
-	* Property: nRows
-	* Number of rows in the table
+	* [Docuemnentation](https://www.sqlite.org/c3ref/free_table.html)
 	*
-	* Property: nCols
-	* Number of columns in the table
+	* ---
+	* ### Properties:
+	* - `nRows`          - Number of rows in the table
+	* - `nCols`          - Number of columns in the table
+	* - `headers`        - An array that contains the headers of the returned table
+	* - `header[value]`  - Returns either the header name or header index based on the value passed
+	*	- `value` - Integer / String
+	*		  - If an integer is passed, the name of the header is returned
+	*		  - If a string is passed, the index of the header is returned
+	* - `rows`           - An array that contains a list of `rows` that are arrays of each field.
+	*                      The length of the `row` array will be the same as the number of columns.
+	* - `row[n]`         - Returns an array that represents the `row` passed as n.
+	*                      The length of the `row` array will be the same as the number of columns.
+	* - `fields`         - An array of each field in the table result returned by SQlite.
+	*                      This property can be used to loop through the entire table quickly.
+	* - `field[row,col]` - Returns a specific field by specifying a row and column.
+	*	- `row` - Integer
+	*	- `col` - Integer / String
 	*
-	* Property: headers
-	* An array that contains the headers of the returned table
+	* - `cell[row,col]`  - A sysnonym for <field>.
+	*                      Returns a specific cell by specifying a row and column.
+	*	- `row` - Integer
+	*	- `col` - Integer / String
 	*
-	* Property: header[value]
-	* Returns either the header name or header index based on the value passed
+	* - `data`           - An array that represents the full table.
+	*                      The first index contains the same information as SQLite3.Table.headers.
+	*                      The second index contains the same information as SQLite3.Table.rows.
 	*
-	* value - Integer / String
-	*
-	*         If an integer is passed, the name of the header is returned
-	*
-	*         If a string is passed, the index of the header is returned
-	*
-	* Property: rows
-	* An array that contains a list of `rows` that are arrays of each field.
-	* The length of the `row` array will be the same as the number of columns.
-	*
-	* Property: row[n]
-	* Returns an array that represents the `row` passed as n.
-	* The length of the `row` array will be the same as the number of columns.
-	*
-	* Property: fields
-	* An array of each field in the table result returned by SQlite.
-	*
-	* This property can be used to loop through the entire table quickly.
-	*
-	* Property: field[row,col]
-	* Returns a specific field by specifying a row and column.
-	*
-	* row - Integer
-	* col - Integer / String
-	*
-	* Property: cell[row,col]
-	* A sysnonym for <field>
-	* Returns a specific cell by specifying a row and column.
-	*
-	* row - Integer
-	* col - Integer / String
-	*
-	* Property: data
-	* An array that represents the full table.
-	* The first index contains the same information as SQLite3.Table.headers.
-	* The second index contains the same information as SQLite3.Table.rows.
-	*
-	* Static Method: GetHeaderIndex
-	* Returns the index of a string that refers to a specific header in a table.
 	*/
 	class Table {
 		nRows   := 0
