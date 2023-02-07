@@ -1,4 +1,4 @@
-﻿#Requires Autohotkey v2.0-
+#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class IBase {
@@ -302,7 +302,12 @@ Class SQLite3 extends IBase {
 	 * Returns:
 	 * str - Escaped string
 	 */
-	static Escape(str, autoTrim:=true) => StrReplace(autoTrim ? Trim(str) : str, "'", "''")
+	static Restore(str)
+	{
+		str := StrReplace(str, "→", "`t")
+		str := StrReplace(str, "¶", "`n")
+		return StrReplace(str, "''", "'")
+	}
 
 	static ReportResult(obj, res, msgBuffer:=unset) {
 		static PREV_FUNC := -2
