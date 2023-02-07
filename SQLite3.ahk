@@ -1,4 +1,4 @@
-#Requires Autohotkey v2.0-
+﻿#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class IBase {
@@ -452,14 +452,14 @@ Class SQLite3 extends IBase {
 					                , A_ThisFunc
 					                , "Row: " Type(row) "`nCol: " Type(col))
 
+				if Type(col) = "String"
+					col := this.header[col]
+
 				if row > this.nRows || row < 1
 				|| col > this.nCols || col < 1
 					throw ValueError( "Invalid range."
 					                , A_ThisFunc
 					                , "The value must be between 0 and the max row/col.")
-
-				if Type(col) = "String"
-					col := this.header[col]
 
 				return this.rows[row][col]
 			}
