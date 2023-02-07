@@ -470,12 +470,13 @@ Class SQLite3 extends IBase {
 					this.headers.Push(data)
 				else
 				{
-					tempData .= data A_Tab
+					tempData .= data '■'
 					this.fields.Push(data)
 
 					if !Mod(A_Index, nCols)
 					{
-						this.rows.Push(StrSplit(Trim(tempData), A_Tab))
+						tempData := RegExReplace(tempData, '■$')
+						this.rows.Push(StrSplit(tempData, '■'))
 						tempData := ""
 					}
 				}
