@@ -1,6 +1,7 @@
 ﻿#Include <Yunit\Yunit>
 #Include <Yunit\Window>
-#Include <SQLite\SQLite3>
+
+#Include ..\SQLite3.ahk
 
 Yunit.Use(YunitWindow).Test(SQLiteTests)
 
@@ -42,11 +43,10 @@ class SQLiteTests {
 			{
 				try sql.Exec(statement)
 				catch
-					OutputDebug(SQLite3.errMsg), Yunit.Assert(false)
+					OutputDebug(this.errMsg), Yunit.Assert(false)
 			}
 			sql.Close()
 		}
-
 		test4_undefinedMethod() {
 			sql := SQLite3()
 
@@ -136,7 +136,7 @@ class SQLiteTests {
 
 			try table := sql.Exec("SELECT UserNames,Domain FROM DATA WHERE country='denmark'")
 			catch
-				OutputDebug(SQLite3.errCode " " SQLite3.errMsg), Yunit.Assert(false)
+				OutputDebug(this.errCode " " this.errMsg), Yunit.Assert(false)
 
 			tests := Array(
 				{value:table.nRows, expected:29221},
@@ -149,13 +149,12 @@ class SQLiteTests {
 			for test in tests
 				Yunit.Assert(test.value = test.expected)
 		}
-
 		test2_getHeaderIndex() {
 			sql := this.sql
 
 			try table := sql.Exec("SELECT UserNames,Domain FROM DATA WHERE country='denmark'")
 			catch
-				OutputDebug(SQLite3.errCode " " SQLite3.errMsg), Yunit.Assert(false)
+				OutputDebug(this.errCode " " this.errMsg), Yunit.Assert(false)
 
 			index := SQLite3.Table.GetHeaderIndex(table, "Domain")
 			Yunit.Assert(index = 2)
