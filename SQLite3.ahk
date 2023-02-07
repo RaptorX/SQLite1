@@ -182,8 +182,10 @@ Class SQLite3 extends IBase {
 		      ,pathBuffer:=Buffer(StrPut(path,"UTF-8"))
 		      ,"UTF-8")
 
-		if overwrite
+		if overwrite && FileExist(path)
 			try FileDelete path
+			catch
+				throw Error("The database file could not be deleted")
 
 		res := DllCall(SQLite3.bin "\sqlite3_open"
 		              ,"ptr", pathBuffer
