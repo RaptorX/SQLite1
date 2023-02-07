@@ -302,6 +302,13 @@ Class SQLite3 extends IBase {
 	 * Returns:
 	 * str - Escaped string
 	 */
+	static Escape(str, autoTrim:=true)
+	{
+		str := StrReplace(str, "`t", "→")
+		str := StrReplace(str, "`n", "¶")
+		return StrReplace(autoTrim ? Trim(str) : str, "'", "''")
+	}
+
 	static Restore(str)
 	{
 		str := StrReplace(str, "→", "`t")
