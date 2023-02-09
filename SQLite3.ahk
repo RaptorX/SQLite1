@@ -374,7 +374,7 @@ Class SQLite3 extends IBase {
 		table := SQLite3.Table(pResult, nRows, nCols)
 
 		res := DllCall(SQLite3.bin "\sqlite3_free_table"
-		              ,"ptr", pResult)
+		              ,"ptr", pResult, 'cdecl')
 
 		SQLite3.ReportResult(obj, res)
 
@@ -421,6 +421,7 @@ Class SQLite3 extends IBase {
 		nCols   := 0
 
 		headers := Array()
+		col[value] => this.header[value]
 		header[value] {
 			get {
 				switch Type(value) {
