@@ -1,4 +1,4 @@
-﻿#Requires Autohotkey v2.0-
+#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class IBase {
@@ -374,7 +374,7 @@ Class SQLite3 extends IBase {
 		table := SQLite3.Table(pResult, nRows, nCols)
 
 		res := DllCall(SQLite3.bin "\sqlite3_free_table"
-		              ,"ptr", pResult)
+		              ,"ptr", pResult, 'cdecl')
 
 		SQLite3.ReportResult(obj, res)
 
