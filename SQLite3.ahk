@@ -1,4 +1,4 @@
-#Requires Autohotkey v2.0-
+﻿#Requires Autohotkey v2.0-
 #Include .\lib\SQLite3.h.ahk
 
 class IBase {
@@ -421,6 +421,7 @@ Class SQLite3 extends IBase {
 		nCols   := 0
 
 		headers := Array()
+		col[value] => this.header[value]
 		header[value] {
 			get {
 				switch Type(value) {
