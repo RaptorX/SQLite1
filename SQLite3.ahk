@@ -337,14 +337,18 @@ Class SQLite3 extends IBase {
 	{
 		str := StrReplace(str, "`t", "→")
 		str := StrReplace(str, "`n", "¶")
-		return StrReplace(autoTrim ? Trim(str) : str, "'", "''")
+		str := StrReplace(str, '"', '""')
+		str := StrReplace(autoTrim ? Trim(str) : str, "'", "''")
+		return str
 	}
 
-	static Restore(str)
+	static UnEscape(str)
 	{
 		str := StrReplace(str, "→", "`t")
 		str := StrReplace(str, "¶", "`n")
-		return StrReplace(str, "''", "'")
+		str := StrReplace(str, '""', '"')
+		str := StrReplace(str, "''", "'")
+		return str
 	}
 
 	static ReportResult(obj, res, msgBuffer:=unset) {
@@ -479,7 +483,7 @@ Class SQLite3 extends IBase {
 				if !nxtPtr:=NumGet(tblPointer, OffSet += A_PtrSize, "ptr")
 					data := ""
 				else
-					data := StrGet(nxtPtr, "UTF-8")
+					data := SQLite3.UnEscape(StrGet(nxtPtr, "UTF-8"))
 
 				if A_Index <= nCols
 					this.headers.Push(data)
