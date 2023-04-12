@@ -18,8 +18,10 @@ class IBase {
 	 * - `NONE`
 	 *
 	 */
-	__New(dbFile?, overwrite:=false) {
-		dllBin := A_LineFile '\..\bin\' SQLite3.bin
+	__New(dbFile?, dllBin?,  overwrite:=false) {
+		
+		dllBin := dllBin ?? A_LineFile '\..\bin\' SQLite3.bin
+		
 		if !this.ptr := DllCall('LoadLibrary', 'str', dllBin)
 			throw OSError(A_LastError, A_ThisFunc, 'Could not load `n' StrReplace(dllBin, A_ScriptDir, "%A_ScriptDir%"))
 
