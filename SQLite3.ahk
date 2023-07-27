@@ -18,8 +18,10 @@ class IBase {
 	 * - `NONE`
 	 *
 	 */
-	__New(dbFile?, overwrite:=false) {
-		dllBin := A_LineFile '\..\bin\' SQLite3.bin
+	__New(dbFile?, dllBin?,  overwrite:=false) {
+		
+		dllBin := dllBin ?? A_LineFile '\..\bin\' SQLite3.bin
+		
 		if !this.ptr := DllCall('LoadLibrary', 'str', dllBin)
 			throw OSError(A_LastError, A_ThisFunc, 'Could not load `n' StrReplace(dllBin, A_ScriptDir, "%A_ScriptDir%"))
 
@@ -104,7 +106,7 @@ class IBase {
  *
  * ### Methods:
  * - `Open`     - Opens a database
- * - `Close`    - Closes a database 
+ * - `Close`    - Closes a database
  * - `Exec`     - Executes an arbitrary SQL Statement that conforms to the sqlite3 engine
  *
  * ### Implemented functions:
@@ -446,8 +448,27 @@ Class SQLite3 extends IBase {
 		row[n] => this.rows[n]
 
 		fields := Array()
-		cell[row,col] => this.field[row, col]
+		cell[row,col]
+		{
+			set => this.field[row, col] := Value
+			get => this.field[row, col]
+		}
 		field[row,col] {
+			set
+			{
+				if Type(row) != "Integer"
+				|| !(Type(col) ~= "i)Integer|String")
+					throw ValueError( "Invalid value type.`n"
+					                . "Row must be an Integer`n"
+					                . "Col Must be an integer or string."
+					                , A_ThisFunc
+					                , "Row: " Type(row) "`nCol: " Type(col))
+
+				if Type(col) = "String"
+					col := this.header[col]
+
+				return this.rows[row][col] := Value
+			}
 			get {
 				if Type(row) != "Integer"
 				|| !(Type(col) ~= "i)Integer|String")
